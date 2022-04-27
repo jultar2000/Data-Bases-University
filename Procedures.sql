@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE INSERT_PLANT(plantId IN VARCHAR2, plantType IN VARCHAR2)
+CREATE OR REPLACE PROCEDURE INSERT_PLANT(plantId VARCHAR2, plantType VARCHAR2)
 AS
 BEGIN
     INSERT INTO PLANTS(PLANT_ID, TYPE_) VALUES (plantId, plantType);
@@ -6,8 +6,9 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        raise_application_error(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
+        RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
+
 
 
 CREATE OR REPLACE PROCEDURE INSERT_SPECIES(speciesId IN VARCHAR2, plantId IN VARCHAR2, countryName IN VARCHAR2)
@@ -18,8 +19,9 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        raise_application_error(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
+        RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
+
 
 
 CREATE OR REPLACE PROCEDURE INSERT_WORKER(workerName VARCHAR2,
@@ -28,13 +30,13 @@ CREATE OR REPLACE PROCEDURE INSERT_WORKER(workerName VARCHAR2,
                                           isWorking IN VARCHAR2)
 AS
 BEGIN
-    IF NOT isWorking = 'F' OR isWorking = 'T'
+
+    IF NOT (isWorking = 'F' OR isWorking = 'T')
     THEN
         RAISE_APPLICATION_ERROR('-20002', 'IS WORKING FIELD CAN BE ONLY F AS FALSE OR T AS TRUE.');
     END IF;
 
     INSERT INTO WORKERS(NAME, SURNAME, AGE) VALUES (workerName, workerSurname, workerAge);
-    COMMIT;
     INSERT INTO STATUS(worker_id, is_working) VALUES (WORKER_SEQ.currval, isWorking);
     COMMIT;
 EXCEPTION
@@ -42,6 +44,7 @@ EXCEPTION
         OTHERS THEN
         RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
+
 
 
 CREATE OR REPLACE PROCEDURE INSERT_PALLET(workerId IN NUMBER, speciesId IN VARCHAR2,
@@ -54,8 +57,10 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        raise_application_error(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
+        RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
+
+
 
 CREATE OR REPLACE PROCEDURE INSERT_PROCEDURE(procedureId IN VARCHAR2, procedureDesc IN VARCHAR2)
 AS
@@ -66,8 +71,10 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        raise_application_error(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
+        RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
+
+
 
 CREATE OR REPLACE PROCEDURE INSERT_MAINTENANCE(speciesId IN VARCHAR2, procedureId IN VARCHAR2, freq IN NUMBER)
 AS
@@ -78,17 +85,35 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        raise_application_error(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
+        RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
 
-CREATE OR REPLACE PROCEDURE INSERT_SCHEDULE()
-AS
+
+
+CREATE OR REPLACE PROCEDURE INSERT_SCHEDULE(palletId IN NUMBER)
+    IS
+    speciesId   varchar2(50);
+    if_exists   NUMBER;
+    type array is table of INTEGER;
+    mainIdArray array := array();
 BEGIN
+    SELECT COUNT(PALLET_ID) INTO if_exists FROM SCHEDULE WHERE PALLET_ID = palletId;
 
+    IF if_exists > 0
+    THEN
+        RAISE_APPLICATION_ERROR('-20002', 'SCHEDULE FOR THIS PALLET ALREADY EXISTS!');
+    END IF;
 
+    SELECT SPECIES_ID INTO speciesId FROM PALLETS WHERE PALLET_ID = palletId;
+    SELECT MAINTENANCE_ID BULK COLLECT INTO mainIdArray FROM MAINTENANCE WHERE SPECIES_ID = speciesId;
 
-
+    FOR i IN 1..mainIdArray.COUNT
+        LOOP
+            INSERT INTO SCHEDULE(PALLET_ID, MAINTENANCE_ID) VALUES (palletId, mainIdArray(i));
+        END LOOP;
+    COMMIT;
 END;
+
 
 
 CREATE OR REPLACE PROCEDURE INSERT_REALISATION(scheduleId IN NUMBER, realisationDate IN DATE)
@@ -100,5 +125,5 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        raise_application_error(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
+        RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;

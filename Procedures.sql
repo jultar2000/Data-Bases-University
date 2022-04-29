@@ -5,7 +5,8 @@ BEGIN
     COMMIT;
 
 EXCEPTION
-    WHEN OTHERS THEN
+    WHEN OTHERS
+    THEN
         RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
 
@@ -18,7 +19,8 @@ BEGIN
     COMMIT;
 
 EXCEPTION
-    WHEN OTHERS THEN
+    WHEN OTHERS
+    THEN
         RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
 
@@ -40,8 +42,8 @@ BEGIN
     INSERT INTO STATUS(worker_id, is_working) VALUES (WORKER_SEQ.currval, isWorking);
     COMMIT;
 EXCEPTION
-    WHEN
-        OTHERS THEN
+    WHEN OTHERS
+    THEN
         RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
 
@@ -49,14 +51,23 @@ END;
 
 CREATE OR REPLACE PROCEDURE INSERT_PALLET(workerId IN NUMBER, speciesId IN VARCHAR2,
                                           palletAmount IN NUMBER, palletDate IN DATE)
-AS
+    IS
+    workerStatus varchar2(1);
 BEGIN
+    SELECT IS_WORKING INTO workerStatus FROM STATUS WHERE WORKER_ID=workerId;
+
+    IF workerStatus = 'F'
+    THEN
+        RAISE_APPLICATION_ERROR('-20002', 'THIS WORKER IS NOT CURRENTLY WORKING!');
+    END IF;
+
     INSERT INTO PALLETS(WORKER_ID, SPECIES_ID, AMOUNT, START_DATE)
     VALUES (workerId, speciesId, palletAmount, palletDate);
     COMMIT;
 
 EXCEPTION
-    WHEN OTHERS THEN
+    WHEN OTHERS
+    THEN
         RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
 
@@ -70,7 +81,8 @@ BEGIN
     COMMIT;
 
 EXCEPTION
-    WHEN OTHERS THEN
+    WHEN OTHERS
+    THEN
         RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
 
@@ -84,7 +96,8 @@ BEGIN
     COMMIT;
 
 EXCEPTION
-    WHEN OTHERS THEN
+    WHEN OTHERS
+    THEN
         RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
 END;
 
@@ -117,13 +130,50 @@ END;
 
 
 CREATE OR REPLACE PROCEDURE INSERT_REALISATION(scheduleId IN NUMBER, realisationDate IN DATE)
-AS
+    IS
+    if_exists NUMBER;
 BEGIN
+    SELECT COUNT(SCHEDULE_ID) INTO if_exists FROM REALISATION WHERE SCHEDULE_ID = scheduleId;
+
+    IF if_exists > 0
+    THEN
+        RAISE_APPLICATION_ERROR('-20002', 'REALISATION FIELD FOR THIS SCHEDULE ALREADY EXISTS!');
+    END IF;
+
     INSERT INTO REALISATION(SCHEDULE_ID, REALISATION_DATE)
     VALUES (scheduleId, realisationDate);
     COMMIT;
 
 EXCEPTION
-    WHEN OTHERS THEN
+    WHEN OTHERS
+    THEN
         RAISE_APPLICATION_ERROR(-20001, 'An error was encountered -' || SQLCODE || ' -ERROR- ' || SQLERRM);
+END;
+
+
+
+CREATE OR REPLACE PROCEDURE UPDATE_REALISATION(scheduleId IN NUMBER, realisationDate IN DATE)
+    IS
+    if_exists NUMBER;
+BEGIN
+    SELECT COUNT(SCHEDULE_ID) INTO if_exists FROM REALISATION WHERE SCHEDULE_ID = scheduleId;
+
+    IF if_exists < 0
+    THEN
+        RAISE_APPLICATION_ERROR('-20002', 'REALISATION FIELD FOR THIS SCHEDULE DO NOT EXIST!');
+    END IF;
+
+    UPDATE REALISATION
+    SET REALISATION_DATE = realisationDate
+    WHERE SCHEDULE_ID = scheduleId;
+    COMMIT;
+END;
+
+CREATE OR REPLACE PROCEDURE UPDATE_WORKER(workerId IN NUMBER, isWorking IN VARCHAR2)
+AS
+BEGIN
+    UPDATE STATUS
+    SET IS_WORKING = isWorking
+    WHERE WORKER_ID = workerId;
+    COMMIT;
 END;

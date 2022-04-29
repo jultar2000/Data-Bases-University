@@ -40,7 +40,6 @@ BEGIN
     INSERT_PALLET(3, 'Lilia koralowa', 3, TO_DATE('2017/09/17', 'yyyy/mm/dd'));
     INSERT_PALLET(3, 'Lilia wodna', 12, TO_DATE('2019/06/21', 'yyyy/mm/dd'));
     INSERT_PALLET(3, 'Bylica logowa', 32, TO_DATE('2020/10/18', 'yyyy/mm/dd'));
-    INSERT_PALLET(3, 'Bylica pylica', 12, TO_DATE('2016/11/22', 'yyyy/mm/dd'));
 END;
 
 --SET OF PROCEDURES FOR MAINTENANCE OF SPECIFIC PLANT SPECIES
@@ -116,20 +115,46 @@ BEGIN
     INSERT_SCHEDULE(7);
     INSERT_SCHEDULE(8);
     INSERT_SCHEDULE(9);
-    INSERT_SCHEDULE(10);
 END;
+
 --REALISATIONS MANAGED BY WORKERS
--- BEGIN
---     INSERT_REALISATION(1, TO_DATE('2016/06/01', 'yyyy/mm/dd'));
---     INSERT_REALISATION(2, TO_DATE('2016/06/01', 'yyyy/mm/dd'));
---     INSERT_REALISATION(3, TO_DATE('2016/08/01', 'yyyy/mm/dd'));
---     INSERT_REALISATION(4, TO_DATE('2016/08/01', 'yyyy/mm/dd'));
---     INSERT_REALISATION(5, TO_DATE('2016/08/01', 'yyyy/mm/dd'));
---     INSERT_REALISATION(6, TO_DATE('2011/02/28', 'yyyy/mm/dd'));
---     INSERT_REALISATION(7, TO_DATE('2011/03/28', 'yyyy/mm/dd'));
---     INSERT_REALISATION();
---     INSERT_REALISATION();
--- END;
+BEGIN
+    INSERT_REALISATION(2, TO_DATE('2022/06/01', 'yyyy/mm/dd'));
+    INSERT_REALISATION(3, TO_DATE('2022/08/01', 'yyyy/mm/dd'));
+    INSERT_REALISATION(4, TO_DATE('2022/08/01', 'yyyy/mm/dd'));
+    INSERT_REALISATION(5, TO_DATE('2012/08/01', 'yyyy/mm/dd'));
+    INSERT_REALISATION(6, TO_DATE('2017/02/28', 'yyyy/mm/dd'));
+    INSERT_REALISATION(7, TO_DATE('2011/03/28', 'yyyy/mm/dd'));
+    INSERT_REALISATION(8, TO_DATE('2021/03/28', 'yyyy/mm/dd'));
+END;
+
+---------- REALISATION CASES
+BEGIN
+    INSERT_REALISATION(1, TO_DATE('2022/09/04', 'yyyy/mm/dd'));
+END;
+
+----------REALISATION BEFORE PREVIOUS REALISATION DATE
+BEGIN
+    UPDATE_REALISATION(1, TO_DATE('2022/09/02', 'yyyy/mm/dd'));
+END;
+
+----------REALISATION BEFORE SCHEDULED DATE
+BEGIN
+    UPDATE_REALISATION(1, TO_DATE('2022/09/13', 'yyyy/mm/dd'));
+END;
+
+----------PROPER REALISATION
+BEGIN
+    UPDATE_REALISATION(1, TO_DATE('2022/09/15', 'yyyy/mm/dd'));
+END;
 
 
 
+------NOT WORKING WORKER AND INSERTING PALLET CASE
+BEGIN
+    INSERT_WORKER('Piotr', 'Kowalski', '32', 'F');
+END;
+
+BEGIN
+    INSERT_PALLET(21, 'Bylica pylica', 12, TO_DATE('2016/11/22', 'yyyy/mm/dd'));
+END;

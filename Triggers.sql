@@ -12,6 +12,8 @@ BEGIN
     :NEW.SCHEDULED_DATE := new_date;
 END;
 
+
+
 CREATE OR REPLACE TRIGGER realisation_trigger
     BEFORE INSERT OR UPDATE
     ON REALISATION
@@ -27,17 +29,22 @@ BEGIN
     FROM SCHEDULE s
     WHERE :NEW.SCHEDULE_ID = s.SCHEDULE_ID;
 
-    IF NOT :NEW.REALISATION_DATE > :OLD.REALISATION_DATE
-    THEN
+        IF NOT (:NEW.REALISATION_DATE >= :OLD.REALISATION_DATE)
+        THEN
         RAISE_APPLICATION_ERROR('-20002', 'THE NEW DATE IS OLDER THAN PREVIOUS REALISATION DATE');
-    END IF;
+        END IF;
 
-    SELECT frequency
-    INTO get_frequency
-    FROM MAINTENANCE
-    WHERE MAINTENANCE_ID = get_maintenance_id;
+        IF NOT (:NEW.REALISATION_DATE >= get_scheduled_date)
+        THEN
+            RAISE_APPLICATION_ERROR('-20002', 'THE NEW DATE IS OLDER THAN SCHEDULED DATE');
+        END IF;
 
-    new_date := :NEW.REALISATION_DATE + get_frequency;
+        SELECT frequency
+        INTO get_frequency
+        FROM MAINTENANCE
+        WHERE MAINTENANCE_ID = get_maintenance_id;
 
-    UPDATE SCHEDULE SET SCHEDULED_DATE = new_date WHERE SCHEDULE_ID = :NEW.SCHEDULE_ID;
-END;
+        new_date := :NEW.REALISATION_DATE + get_frequency;
+
+        UPDATE SCHEDULE SET SCHEDULED_DATE = new_date WHERE SCHEDULE_ID = :NEW.SCHEDULE_ID;
+    END;
